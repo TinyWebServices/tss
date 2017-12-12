@@ -49,13 +49,13 @@ def mime_type_from_object_name(object_name):
 
 def make_object_path(storage_root, bucket_name, object_name, create=False):
     object_hash = hash_object_name(object_name)
-    path = Path(storage_root, bucket_name, object_hash[0:2], object_hash[2:4], object_hash[4:])
+    path = Path(storage_root, "buckets", bucket_name, object_hash[0:2], object_hash[2:4], object_hash[4:])
     if create and not path.parent.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
     return path
 
 def make_bucket_path(storage_root, bucket_name, create=False):
-    path = Path(storage_root, bucket_name)
+    path = Path(storage_root, "buckets", bucket_name)
     if create and not path.exists():
         path.mkdir(parents=True, exist_ok=True)
     return path
