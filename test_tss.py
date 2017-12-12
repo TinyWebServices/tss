@@ -13,6 +13,7 @@ import tss
 def app(tmpdir):
     app = tss.app
     app.config["STORAGE_ROOT"] = str(tmpdir)
+    app.config["API_TOKEN"] = None
     return app
 
 def test_hash_object_name():
@@ -49,49 +50,3 @@ def test_make_bucket_path_create(tmpdir):
     path = tss.make_bucket_path(tmpdir, "test-bucket", create=True)
     assert path == tmpdir + "/buckets/test-bucket"
     assert path.exists() == True
-
-
-
-# def test_get_buckets(app, client):
-#     res = client.get(url_for("get_buckets"))
-#     assert res.status_code == 200
-#     assert type(res.json) == list
-#     assert len(res.json) == 0
-
-#     res = client.put(url_for('put_object', bucket_name="foo", object_name="aaaaaaaaaaaaaaaaaaaaaaaa.txt"), data="test")
-#     assert res.status_code == 200
-
-#     res = client.get(url_for("get_buckets"))
-#     assert res.status_code == 200
-#     assert type(res.json) == list
-#     assert len(res.json) == 1
-#     assert "name" in res.json[0] and res.json[0]["name"] == "foo"
-#     assert "created" in res.json[0]
-#     assert "modified" in res.json[0]
-
-#     res = client.put(url_for('put_object', bucket_name="bar", object_name="aaaaaaaaaaaaaaaaaaaaaaaa.txt"), data="test")
-#     assert res.status_code == 200
-
-#     res = client.get(url_for("get_buckets"))
-#     assert res.status_code == 200
-#     assert type(res.json) == list
-#     assert len(res.json) == 2
-
-
-# def test_authentication(app, client):
-
-#     app.config["API_TOKEN"] = "85cf8bccd8a5b42e0a2c2f64a3645ba8c0a7d625"
-
-#     # Put something without authentication
-#     res = client.put(url_for('put_object', bucket_name="test_authentication", object_name="aaaaaaaaaaaaaaaaaaaaaaaa.txt"), data="test")
-#     assert res.status_code == 401
-
-#     # Put something with incorrect authentication
-#     res = client.put(url_for('put_object', bucket_name="test_authentication", object_name="aaaaaaaaaaaaaaaaaaaaaaaa.txt"), data="test")
-#     assert res.status_code == 401
-
-#     # Put something with correct authentication
-#     res = client.put(url_for('put_object', bucket_name="test_authentication", object_name="aaaaaaaaaaaaaaaaaaaaaaaa.txt"),
-#                      data="test", headers={"Authorization": "token 85cf8bccd8a5b42e0a2c2f64a3645ba8c0a7d625"})
-#     assert res.status_code == 200
-
