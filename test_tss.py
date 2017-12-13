@@ -20,11 +20,6 @@ def test_hash_object_name():
     assert (tss.hash_object_name("hello.txt")) == "3857b672471862eab426eba0622e44bd2cedbd5d"
     assert (tss.hash_object_name("foo/bar.txt")) == "52235c6fb17f9b5c405adf27d35f65ce1ff388cb"
 
-def test_mime_type_from_path():
-    for extension, mime_type in tss.KNOWN_MIME_TYPES.items():
-        assert tss.mime_type_from_path(Path("test." + extension)) == mime_type
-    assert tss.mime_type_from_path(Path("test.unknown")) == tss.DEFAULT_MIME_TYPE
-
 def test_make_object_path(tmpdir):
     path = tss.make_object_path(tmpdir, "test-bucket", "hello.txt", create=False)
     assert path == tmpdir + "/buckets/test-bucket/38/57/b672471862eab426eba0622e44bd2cedbd5d"
