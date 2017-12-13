@@ -2,6 +2,8 @@
 
 *Stefan Arentz, December 2017*
 
+[![Build Status](https://travis-ci.org/st3fan/tss-server.svg?branch=master)](https://travis-ci.org/st3fan/tss-server) [![codecov](https://codecov.io/gh/st3fan/tss-server/branch/master/graph/badge.svg)](https://codecov.io/gh/st3fan/tss-server)
+
 This is a small REST API for storing and retrieving files. Very much like S3.
 
 > Work in progress. Sort of works for what I use it for at home. BUt needs a good bunch of attention to make it a more general tool.
