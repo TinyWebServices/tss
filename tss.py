@@ -12,6 +12,7 @@ from werkzeug.routing import Rule, Map, BaseConverter, ValidationError
 from werkzeug.wsgi import wrap_file
 from raven.contrib.flask import Sentry
 import lmdb
+import maya
 
 
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
@@ -152,6 +153,7 @@ def put_object(bucket_name, object_name):
     meta_data = {
         "Content-Type": request.headers.get("Content-Type", DEFAULT_CONTENT_TYPE),
         "Content-Encoding": request.headers.get("Content-Encoding", DEFAULT_CONTENT_ENCODING),
+        "Last-Modified": str(maya.now()),
     }
 
     if meta_data["Content-Type"] == "":

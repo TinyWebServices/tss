@@ -92,12 +92,12 @@ def test_meta_data_headers2(client):
         assert r.headers["Content-Encoding"] == tss.DEFAULT_CONTENT_ENCODING
         assert r.headers["X-TSS-N"] == str(n)
 
-def dump_db():
-    with tss.get_lmdb_env().begin() as tx:
-        cursor = tx.cursor()
-        cursor.first()
-        for key, value in cursor:
-            print(key, value)
+# def dump_db():
+#     with tss.get_lmdb_env().begin() as tx:
+#         cursor = tx.cursor()
+#         cursor.first()
+#         for key, value in cursor:
+#             print(key, value)
 
 def test_delete_meta_data(client, app):
     # Create a bucket
@@ -108,13 +108,22 @@ def test_delete_meta_data(client, app):
                    headers={"X-TSS-Foo": "Bar"})
     assert r.status_code == 200
     # Count number of values
-    print("Before")
-    dump_db()
-    assert tss.get_lmdb_env().stat()["entries"] == 3
+    assert tss.get_lmdb_env().stat()["entries"] == 4 # (Content-Type, Content-Encoding, Last-Modified + X-TSS-Foo)
     # Delete the file
     r = client.delete(flask.url_for('delete_object', bucket_name="test", object_name="foo/bar/test.txt"))
     assert r.status_code == 200
     # Count number of values
-    print("After")
-    dump_db()
     assert tss.get_lmdb_env().stat()["entries"] == 0
+
+def test_last_modified(client, app):
+    # Create a bucket
+    r = client.put(flask.url_for('put_bucket', bucket_name="test"))
+    assert r.status_code == 200
+    # Store an object
+    r = client.put(flask.url_for('put_object', bucket_name="test", object_name="test.txt"), data="test")
+    assert r.status_code == 200
+    # Get the objct
+    r = client.get(flask.url_for('get_object', bucket_name="test", object_name="test.txt"))
+    assert r.status_code == 200
+    assert "Last-Modified" in r.headers
+
