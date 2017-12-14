@@ -68,7 +68,7 @@ def split_key(key):
     #return t[0].decode(), t[1].decode(), t[2].decode()
 
 def my_send_file(path, headers):
-    return app.response_class(wrap_file(request.environ, path.open()), mimetype=headers.get("Content-Type", DEFAULT_CONTENT_TYPE),
+    return app.response_class(wrap_file(request.environ, path.open(mode="r")), mimetype=headers.get("Content-Type", DEFAULT_CONTENT_TYPE),
                               headers=headers, direct_passthrough=True)
 
 
