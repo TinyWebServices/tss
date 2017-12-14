@@ -27,7 +27,7 @@ def test_authentication_401(app, client):
                      data="test", headers={"Authorization": "token invalidtoken"})
     assert res.status_code == 401
 
-def test_authentication_401(app, client):
+def test_authentication_200(app, client):
     # Create a bucket
     r = client.put(flask.url_for('put_bucket', bucket_name="test_authentication"),
                    headers={"Authorization": "token " + TEST_API_TOKEN})
