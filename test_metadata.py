@@ -127,3 +127,15 @@ def test_last_modified(client, app):
     assert r.status_code == 200
     assert "Last-Modified" in r.headers
 
+def test_content_length(client, app):
+    # Create a bucket
+    r = client.put(flask.url_for('put_bucket', bucket_name="test"))
+    assert r.status_code == 200
+    # Store an object
+    r = client.put(flask.url_for('put_object', bucket_name="test", object_name="test.txt"), data="test")
+    assert r.status_code == 200
+    # Get the objct
+    r = client.get(flask.url_for('get_object', bucket_name="test", object_name="test.txt"))
+    assert r.status_code == 200
+    assert "Content-Length" in r.headers
+    assert r.headers["Content-Length"] == "4"

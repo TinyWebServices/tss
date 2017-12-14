@@ -119,6 +119,7 @@ def get_object(bucket_name, object_name):
     headers = {
         "Content-Type": DEFAULT_CONTENT_TYPE,
         "Content-Encoding": DEFAULT_CONTENT_ENCODING,
+        "Content-Length": object_path.stat().st_size,
     }
 
     with get_lmdb_env().begin() as tx:
