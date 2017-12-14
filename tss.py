@@ -9,6 +9,7 @@ from os.path import splitext
 from os import getenv
 from flask import Flask, abort, jsonify, request, send_file, g
 from werkzeug.routing import Rule, Map, BaseConverter, ValidationError
+from werkzeug.wsgi import wrap_file
 from raven.contrib.flask import Sentry
 import lmdb
 
@@ -59,6 +60,18 @@ def make_bucket_path(storage_root, bucket_name, create=False):
         path.mkdir(parents=True, exist_ok=True)
     return path
 
+def key_prefix(bucket_name, object_name):
+    return f"{bucket_name}:{object_name}:".encode()
+
+def split_key(key):
+    return key.decode().split(":", 3)
+    #return t[0].decode(), t[1].decode(), t[2].decode()
+
+def my_send_file(path, headers):
+    return app.response_class(wrap_file(request.environ, path.open()), mimetype=headers.get("Content-Type", DEFAULT_CONTENT_TYPE),
+                              headers=headers, direct_passthrough=True)
+
+
 #
 # Authentication
 #
@@ -90,20 +103,6 @@ def delete_bucket(bucket_name):
 #
 # Objects
 #
-
-def key_prefix(bucket_name, object_name):
-    return f"{bucket_name}:{object_name}:".encode()
-
-def split_key(key):
-    return key.decode().split(":", 3)
-    #return t[0].decode(), t[1].decode(), t[2].decode()
-
-from werkzeug.wsgi import wrap_file
-
-def my_send_file(path, headers):
-    return app.response_class(wrap_file(request.environ, path.open()), mimetype=headers.get("Content-Type", DEFAULT_CONTENT_TYPE),
-                              headers=headers, direct_passthrough=True)
-
 
 @app.route("/<bucket_name:bucket_name>/<path:object_name>", methods=["GET"])
 def get_object(bucket_name, object_name):
@@ -154,8 +153,6 @@ def put_object(bucket_name, object_name):
 
     if meta_data["Content-Type"] == "":
         meta_data["Content-Type"] = DEFAULT_CONTENT_TYPE
-
-    print(request.headers)
 
     for name, value in request.headers.items():
         if name.startswith("X-Tss-"):
