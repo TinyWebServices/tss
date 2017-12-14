@@ -26,12 +26,12 @@ def test_delete_bucket_200(client):
     r = client.delete(url_for('delete_bucket', bucket_name="test"))
     assert r.status_code == 200
 
-def test_get_object_404_bucket(client):
+def test_get_object_404_on_bucket(client):
     # Non existing bucket
     res = client.get(url_for('get_object', bucket_name="doesnotexist", object_name="foo/bar/test.txt"))
     assert res.status_code == 404
 
-def test_get_object_404_bucket(client):
+def test_get_object_404_on_object(client):
     r = client.put(url_for('put_bucket', bucket_name="test"))
     assert r.status_code == 200
     res = client.get(url_for('get_object', bucket_name="test", object_name="foo/bar/test.txt"))
