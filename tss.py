@@ -122,8 +122,11 @@ def get_object(bucket_name, object_name):
 
     with get_lmdb_env().begin() as tx:
         cursor = tx.cursor()
-        cursor.set_range(key_prefix(bucket_name, object_name))
+        prefix = key_prefix(bucket_name, object_name)
+        cursor.set_range(prefix)
         for key, value in cursor:
+            if not key.startswith(prefix):
+                break
             _, _, header_name = split_key(key)
             header_value = value.decode()
             headers[header_name] = header_value

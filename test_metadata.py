@@ -77,7 +77,7 @@ def test_meta_data_headers(client):
     assert r.headers["X-TSS-Foo"] == "Bar"
     assert r.headers["x-tss-something"] == "Something"
 
-def test_meta_data_headers(client):
+def test_meta_data_headers2(client):
     # Create a bucket
     r = client.put(flask.url_for('put_bucket', bucket_name="test"))
     assert r.status_code == 200
@@ -89,9 +89,8 @@ def test_meta_data_headers(client):
     for n in range(10):
         r = client.get(flask.url_for('get_object', bucket_name="test", object_name=str(n)))
         assert r.status_code == 200
-        #assert r.headers["Content-Encoding"] == tss.DEFAULT_CONTENT_ENCODING
-        #assert r.headers["X-TSS-Foo"] == "Bar"
-        #assert r.headers["x-tss-something"] == "Something"
+        assert r.headers["Content-Encoding"] == tss.DEFAULT_CONTENT_ENCODING
+        assert r.headers["X-TSS-N"] == str(n)
 
 def dump_db():
     with tss.get_lmdb_env().begin() as tx:
