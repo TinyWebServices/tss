@@ -99,7 +99,7 @@ def test_meta_data_headers2(client):
 #         for key, value in cursor:
 #             print(key, value)
 
-def test_delete_meta_data(client, app):
+def test_delete_meta_data(client):
     # Create a bucket
     r = client.put(flask.url_for('put_bucket', bucket_name="test"))
     assert r.status_code == 200
@@ -115,7 +115,7 @@ def test_delete_meta_data(client, app):
     # Count number of values
     assert tss.get_lmdb_env().stat()["entries"] == 0
 
-def test_last_modified(client, app):
+def test_last_modified(client):
     # Create a bucket
     r = client.put(flask.url_for('put_bucket', bucket_name="test"))
     assert r.status_code == 200
@@ -127,7 +127,7 @@ def test_last_modified(client, app):
     assert r.status_code == 200
     assert "Last-Modified" in r.headers
 
-def test_content_length(client, app):
+def test_content_length(client):
     # Create a bucket
     r = client.put(flask.url_for('put_bucket', bucket_name="test"))
     assert r.status_code == 200
@@ -139,3 +139,29 @@ def test_content_length(client, app):
     assert r.status_code == 200
     assert "Content-Length" in r.headers
     assert r.headers["Content-Length"] == "4"
+
+def test_update_object(client):
+    # Create a bucket
+    r = client.put(flask.url_for('put_bucket', bucket_name="test"))
+    assert r.status_code == 200
+    # Store an object
+    r = client.put(flask.url_for('put_object', bucket_name="test", object_name="test.txt"), data="test", headers={"X-TSS-A": "Aa", "X-TSS-X": "X"})
+    assert r.status_code == 200
+    r = client.get(flask.url_for('get_object', bucket_name="test", object_name="test.txt"))
+    assert r.status_code == 200
+    assert "X-TSS-A" in r.headers
+    assert r.headers["X-TSS-A"] == "Aa"
+    assert "X-TSS-X" in r.headers
+    assert r.headers["X-TSS-X"] == "X"
+    assert r.headers["Content-Length"] == "4"
+    # Update the object
+    r = client.put(flask.url_for('put_object', bucket_name="test", object_name="test.txt"), data="newtest", headers={"X-TSS-B": "Bbbb", "X-TSS-X": "XxX"})
+    assert r.status_code == 200
+    r = client.get(flask.url_for('get_object', bucket_name="test", object_name="test.txt"))
+    assert r.status_code == 200
+    assert "X-TSS-A" not in r.headers
+    assert "X-TSS-B" in r.headers
+    assert r.headers["X-TSS-B"] == "Bbbb"
+    assert "X-TSS-X" in r.headers
+    assert r.headers["X-TSS-X"] == "XxX"
+    assert r.headers["Content-Length"] == "7"

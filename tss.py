@@ -165,6 +165,11 @@ def put_object(bucket_name, object_name):
             meta_data[name] = value
 
     with get_lmdb_env().begin(write=True) as tx:
+        cursor = tx.cursor()
+        prefix = key_prefix(bucket_name, object_name)
+        cursor.set_range(prefix)
+        while cursor.key().startswith(prefix):
+            cursor.delete()
         for k, v in meta_data.items():
             tx.put(f"{bucket_name}:{object_name}:{k}".encode(), v.encode())
 
