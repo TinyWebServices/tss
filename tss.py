@@ -7,7 +7,8 @@ import hashlib, json, re, shutil
 from pathlib import Path
 from os.path import splitext
 from os import getenv
-from flask import Flask, abort, jsonify, request, send_file, g
+from base64 import b64encode, b64decode
+from flask import Flask, abort, jsonify, request, send_file, g, url_for
 from werkzeug.routing import Rule, Map, BaseConverter, ValidationError
 from werkzeug.wsgi import wrap_file
 from raven.contrib.flask import Sentry
@@ -61,8 +62,11 @@ def make_bucket_path(storage_root, bucket_name, create=False):
         path.mkdir(parents=True, exist_ok=True)
     return path
 
-def key_prefix(bucket_name, object_name):
-    return f"{bucket_name}:{object_name}:".encode()
+def key_prefix(bucket_name, object_name=None):
+    if object_name:
+        return f"{bucket_name}:{object_name}:"
+    else:
+        return f"{bucket_name}:"
 
 def split_key(key):
     return key.decode().split(":", 3)
@@ -88,10 +92,50 @@ def authenticate():
 # Buckets
 #
 
+@app.route("/<bucket_name:bucket_name>", methods=["GET"])
+def get_bucket(bucket_name):
+    bucket_path = make_bucket_path(app.config["STORAGE_ROOT"], bucket_name, create=True)
+    if not bucket_path.exists():
+        abort(404)
+
+    prefix = key_prefix(bucket_name).encode()
+    if "next" in request.args:
+        prefix = b64decode(request.args.get("next"))
+
+    results = []
+
+    with get_lmdb_env().begin() as tx:
+        cursor = tx.cursor()
+        cursor.set_range(prefix)
+        for key, value in cursor:
+            if not key.startswith(f"{bucket_name}:".encode()):
+                break
+            _, object_name, header_name = split_key(key)
+            header_value = value.decode()
+
+            if len(results) and results[-1]["Key"] == object_name:
+                results[-1][header_name] = header_value
+            else:
+                if len(results) == 100:
+                    break
+                results.append({"Key": object_name, header_name: header_value})
+        else:
+            key = None
+
+    if key:
+        _, object_name, header_name = split_key(key)
+        next_prefix = key_prefix(bucket_name, object_name).encode()
+        next_link = "%s%s?next=%s" % (request.base_url, url_for('get_bucket', bucket_name=bucket_name), b64encode(next_prefix).decode())
+        return jsonify(results), 200, {"Link": f"<{next_link}>; rel=next" }
+    else:
+        return jsonify(results)
+
+
 @app.route("/<bucket_name:bucket_name>", methods=["PUT"])
 def put_bucket(bucket_name):
     bucket_path = make_bucket_path(app.config["STORAGE_ROOT"], bucket_name, create=True)
     return jsonify({})
+
 
 @app.route("/<bucket_name:bucket_name>", methods=["DELETE"])
 def delete_bucket(bucket_name):
@@ -124,7 +168,7 @@ def get_object(bucket_name, object_name):
 
     with get_lmdb_env().begin() as tx:
         cursor = tx.cursor()
-        prefix = key_prefix(bucket_name, object_name)
+        prefix = key_prefix(bucket_name, object_name).encode()
         cursor.set_range(prefix)
         for key, value in cursor:
             if not key.startswith(prefix):
@@ -166,7 +210,7 @@ def put_object(bucket_name, object_name):
 
     with get_lmdb_env().begin(write=True) as tx:
         cursor = tx.cursor()
-        prefix = key_prefix(bucket_name, object_name)
+        prefix = key_prefix(bucket_name, object_name).encode()
         cursor.set_range(prefix)
         while cursor.key().startswith(prefix):
             cursor.delete()
@@ -188,11 +232,10 @@ def delete_object(bucket_name, object_name):
 
     with get_lmdb_env().begin(write=True) as tx:
         cursor = tx.cursor()
-        prefix = key_prefix(bucket_name, object_name)
+        prefix = key_prefix(bucket_name, object_name).encode()
         cursor.set_range(prefix)
         while cursor.key().startswith(prefix):
             cursor.delete()
-
-    object_path.unlink() # TODO Should this move into the transaction?
+        object_path.unlink()
 
     return jsonify({})
