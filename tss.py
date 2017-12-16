@@ -94,7 +94,7 @@ def authenticate():
 
 @app.route("/<bucket_name:bucket_name>", methods=["GET"])
 def get_bucket(bucket_name):
-    bucket_path = make_bucket_path(app.config["STORAGE_ROOT"], bucket_name, create=True)
+    bucket_path = make_bucket_path(app.config["STORAGE_ROOT"], bucket_name, create=False)
     if not bucket_path.exists():
         abort(404)
 

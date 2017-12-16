@@ -25,6 +25,10 @@ def test_get_bucket(client):
     assert type(r.json) == list
     assert len(r.json) == 17
 
+def test_get_bucket_404(client):
+    r = client.get(flask.url_for('get_bucket', bucket_name="doesnotexist"))
+    assert r.status_code == 404
+
 def parse_test_link_header(value):
     LINK_RE = re.compile("<http://localhost/test([^>]+)>; rel=next$")
     m = LINK_RE.match(value)
