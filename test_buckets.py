@@ -31,57 +31,50 @@ def test_get_bucket_404(client):
     assert r.status_code == 404
 
 def parse_test_link_header(value):
-    LINK_RE = re.compile("<http://localhost/test([^>]+)>; rel=next$")
+    LINK_RE = re.compile("<http://localhost/\w+(/[^>]+)>; rel=next$")
     m = LINK_RE.match(value)
     if m:
         return m.group(1)
 
 def test_get_bucket_paging(client, app):
     # Fill up some buckets
-    r = client.put(flask.url_for('put_bucket', bucket_name="aaaa"))
-    assert r.status_code == 200
-    for n in range(234):
-        r = client.put(flask.url_for('put_object', bucket_name="aaaa", object_name="aaaa-%.3d.txt" % n), data=f"This is test file #{n}")
+    for bucket_name in ("aa", "aaa", "aaaa", "test", "zzzz", "zzz", "zz"):
+        r = client.put(flask.url_for('put_bucket', bucket_name=bucket_name))
         assert r.status_code == 200
+        for n in range(234):
+            r = client.put(flask.url_for('put_object', bucket_name=bucket_name, object_name="%s-%.3d.txt" % (bucket_name, n)),
+                           data=f"This is test file #{n} in bucket {bucket_name}")
+            assert r.status_code == 200
 
-    r = client.put(flask.url_for('put_bucket', bucket_name="test"))
-    assert r.status_code == 200
-    for n in range(234):
-        r = client.put(flask.url_for('put_object', bucket_name="test", object_name="test-%.3d.txt" % n), data=f"This is test file #{n}")
+    for bucket_name in ("aa", "aaa", "aaaa", "test", "zzzz", "zzz", "zz"):
+        # Page 1
+        r = client.get(flask.url_for('get_bucket', bucket_name=bucket_name))
         assert r.status_code == 200
-
-    r = client.put(flask.url_for('put_bucket', bucket_name="zzzz"))
-    assert r.status_code == 200
-    for n in range(234):
-        r = client.put(flask.url_for('put_object', bucket_name="zzzz", object_name="zzzz-%.3d.txt" % n), data=f"This is test file #{n}")
+        assert type(r.json) == list
+        assert len(r.json) == 100
+        assert r.json[0]["Key"] == f"{bucket_name}-000.txt"
+        assert r.json[99]["Key"] == f"{bucket_name}-099.txt"
+        assert "Link" in r.headers
+        next_link = parse_test_link_header(r.headers["Link"])
+        assert next_link != None
+        # Page 2
+        r = client.get(next_link)
         assert r.status_code == 200
-
-    # Get the bucket contents
-    r = client.get(flask.url_for('get_bucket', bucket_name="test"))
-    assert r.status_code == 200
-    assert type(r.json) == list
-    assert len(r.json) == 100
-    assert r.json[0]["Key"] == "test-000.txt"
-    assert r.json[99]["Key"] == "test-099.txt"
-    assert "Link" in r.headers
-    next_link = parse_test_link_header(r.headers["Link"])
-    assert next_link != None
-    #
-    r = client.get(next_link)
-    assert r.status_code == 200
-    assert type(r.json) == list
-    assert len(r.json) == 100
-    assert r.json[0]["Key"] == "test-100.txt"
-    assert r.json[99]["Key"] == "test-199.txt"
-    assert "Link" in r.headers
-    next_link = parse_test_link_header(r.headers["Link"])
-    assert next_link != None
-    #
-    r = client.get(next_link)
-    assert r.status_code == 200
-    assert type(r.json) == list
-    assert len(r.json) == 34
-    assert "Link" not in r.headers
+        assert type(r.json) == list
+        assert len(r.json) == 100
+        assert r.json[0]["Key"] == f"{bucket_name}-100.txt"
+        assert r.json[99]["Key"] == f"{bucket_name}-199.txt"
+        assert "Link" in r.headers
+        next_link = parse_test_link_header(r.headers["Link"])
+        assert next_link != None
+        # Page 3
+        r = client.get(next_link)
+        assert r.status_code == 200
+        assert type(r.json) == list
+        assert len(r.json) == 34
+        assert r.json[0]["Key"] == f"{bucket_name}-200.txt"
+        assert r.json[33]["Key"] == f"{bucket_name}-233.txt"
+        assert "Link" not in r.headers
 
 def test_get_bucket_paging_one_page_minus_one(client, app):
     r = client.put(flask.url_for('put_bucket', bucket_name="test"))
