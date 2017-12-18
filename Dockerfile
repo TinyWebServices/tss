@@ -3,4 +3,4 @@ WORKDIR /usr/src/app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-CMD [ "gunicorn", "--workers=32", "--bind=0.0.0.0:8080", "--name=tss", "api:app" ]
+CMD [ "gunicorn", "--workers=8", "--timeout=90", "--bind=0.0.0.0:8080", "--name=tss", "tss:app" ]
