@@ -37,12 +37,25 @@ def parse_test_link_header(value):
         return m.group(1)
 
 def test_get_bucket_paging(client, app):
-    # Fill up a bucket
+    # Fill up some buckets
+    r = client.put(flask.url_for('put_bucket', bucket_name="aaaa"))
+    assert r.status_code == 200
+    for n in range(234):
+        r = client.put(flask.url_for('put_object', bucket_name="aaaa", object_name="aaaa-%.3d.txt" % n), data=f"This is test file #{n}")
+        assert r.status_code == 200
+
     r = client.put(flask.url_for('put_bucket', bucket_name="test"))
     assert r.status_code == 200
     for n in range(234):
         r = client.put(flask.url_for('put_object', bucket_name="test", object_name="test-%.3d.txt" % n), data=f"This is test file #{n}")
         assert r.status_code == 200
+
+    r = client.put(flask.url_for('put_bucket', bucket_name="zzzz"))
+    assert r.status_code == 200
+    for n in range(234):
+        r = client.put(flask.url_for('put_object', bucket_name="zzzz", object_name="zzzz-%.3d.txt" % n), data=f"This is test file #{n}")
+        assert r.status_code == 200
+
     # Get the bucket contents
     r = client.get(flask.url_for('get_bucket', bucket_name="test"))
     assert r.status_code == 200
