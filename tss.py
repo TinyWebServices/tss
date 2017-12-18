@@ -122,13 +122,13 @@ def get_bucket(bucket_name):
         else:
             key = None
 
-    if key:
-        _, object_name, header_name = split_key(key)
-        next_prefix = key_prefix(bucket_name, object_name).encode()
-        next_link = "%s%s?next=%s" % (request.base_url, url_for('get_bucket', bucket_name=bucket_name), b64encode(next_prefix).decode())
-        return jsonify(results), 200, {"Link": f"<{next_link}>; rel=next" }
-    else:
+    if not key:
         return jsonify(results)
+
+    _, object_name, header_name = split_key(key)
+    next_prefix = key_prefix(bucket_name, object_name).encode()
+    next_link = "%s%s?next=%s" % (request.base_url, url_for('get_bucket', bucket_name=bucket_name), b64encode(next_prefix).decode())
+    return jsonify(results), 200, {"Link": f"<{next_link}>; rel=next" }
 
 
 @app.route("/<bucket_name:bucket_name>", methods=["PUT"])
