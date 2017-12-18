@@ -3,13 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import hashlib, json, re, shutil
-from pathlib import Path
-from os.path import splitext
-from os import getenv
-from base64 import b64encode, b64decode
-from flask import Flask, abort, jsonify, request, send_file, g, url_for
-from werkzeug.routing import Rule, Map, BaseConverter, ValidationError
+import base64
+import hashlib
+import os
+import pathlib
+import shutil
+
+from flask import Flask, abort, jsonify, request, g, url_for
+from werkzeug.routing import BaseConverter
 from werkzeug.wsgi import wrap_file
 from raven.contrib.flask import Sentry
 import lmdb
@@ -21,19 +22,22 @@ DEFAULT_CONTENT_ENCODING = "identity"
 
 
 class BucketNameConverter(BaseConverter):
+
     def __init__(self, url_map):
         super().__init__(url_map)
         self.regex = r"[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]+"
+
     def to_python(self, value):
         return value
+
     def to_url(self, value):
         return value
 
 
 app = Flask(__name__)
 app.url_map.converters['bucket_name'] = BucketNameConverter
-app.config["STORAGE_ROOT"] = getenv("TSS_STORAGE_ROOT", "/data/tss")
-app.config["API_TOKEN"] = getenv("TSS_API_TOKEN", None)
+app.config["STORAGE_ROOT"] = os.getenv("TSS_STORAGE_ROOT", "/data/tss")
+app.config["API_TOKEN"] = os.getenv("TSS_API_TOKEN", None)
 
 
 sentry = Sentry(app)
@@ -49,18 +53,21 @@ def get_lmdb_env():
 def hash_object_name(object_name):
     return hashlib.sha1(object_name.encode()).hexdigest()
 
+
 def make_object_path(storage_root, bucket_name, object_name, create=False):
     object_hash = hash_object_name(object_name)
-    path = Path(storage_root, "buckets", bucket_name, object_hash[0:2], object_hash[2:4], object_hash[4:])
+    path = pathlib.Path(storage_root, "buckets", bucket_name, object_hash[0:2], object_hash[2:4], object_hash[4:])
     if create and not path.parent.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
     return path
 
+
 def make_bucket_path(storage_root, bucket_name, create=False):
-    path = Path(storage_root, "buckets", bucket_name)
+    path = pathlib.Path(storage_root, "buckets", bucket_name)
     if create and not path.exists():
         path.mkdir(parents=True, exist_ok=True)
     return path
+
 
 def key_prefix(bucket_name, object_name=None):
     if object_name:
@@ -68,9 +75,10 @@ def key_prefix(bucket_name, object_name=None):
     else:
         return f"{bucket_name}:"
 
+
 def split_key(key):
     return key.decode().split(":", 3)
-    #return t[0].decode(), t[1].decode(), t[2].decode()
+
 
 def my_send_file(path, headers):
     return app.response_class(wrap_file(request.environ, path.open(mode="rb")), mimetype=headers.get("Content-Type", DEFAULT_CONTENT_TYPE),
@@ -88,6 +96,7 @@ def authenticate():
         if request.headers.get("Authorization") != "token " + api_token:
             abort(401)
 
+
 #
 # Buckets
 #
@@ -100,7 +109,7 @@ def get_bucket(bucket_name):
 
     prefix = key_prefix(bucket_name).encode()
     if "next" in request.args:
-        prefix = b64decode(request.args.get("next"))
+        prefix = base64.b64decode(request.args.get("next"))
 
     results = []
 
@@ -125,16 +134,15 @@ def get_bucket(bucket_name):
     if key and not not key.startswith(f"{bucket_name}:".encode()):
         _, object_name, header_name = split_key(key)
         next_prefix = key_prefix(bucket_name, object_name).encode()
-        next_link = "%s%s?next=%s" % (request.base_url, url_for('get_bucket', bucket_name=bucket_name), b64encode(next_prefix).decode())
-        return jsonify(results), 200, {"Link": f"<{next_link}>; rel=next" }
+        next_link = "%s%s?next=%s" % (request.base_url, url_for('get_bucket', bucket_name=bucket_name), base64.b64encode(next_prefix).decode())
+        return jsonify(results), 200, {"Link": f"<{next_link}>; rel=next"}
 
     return jsonify(results)
 
 
-
 @app.route("/<bucket_name:bucket_name>", methods=["PUT"])
 def put_bucket(bucket_name):
-    bucket_path = make_bucket_path(app.config["STORAGE_ROOT"], bucket_name, create=True)
+    make_bucket_path(app.config["STORAGE_ROOT"], bucket_name, create=True)
     return jsonify({})
 
 
@@ -145,6 +153,7 @@ def delete_bucket(bucket_name):
         abort(404)
     shutil.rmtree(str(bucket_path))
     return jsonify({})
+
 
 #
 # Objects
