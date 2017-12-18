@@ -2,7 +2,7 @@
 
 *Stefan Arentz, December 2017*
 
-[![Build Status](https://travis-ci.org/st3fan/tss-server.svg?branch=master)](https://travis-ci.org/st3fan/tss-server) [![codecov](https://codecov.io/gh/st3fan/tss-server/branch/master/graph/badge.svg)](https://codecov.io/gh/st3fan/tss-server)
+[![Build Status](https://travis-ci.org/st3fan/tss-server.svg?branch=master)](https://travis-ci.org/st3fan/tss-server) [![codecov](https://codecov.io/gh/st3fan/tss-server/branch/master/graph/badge.svg)](https://codecov.io/gh/st3fan/tss-server) [![Lintly](https://lintly.com/gh/st3fan/tss-server/badge.svg)](https://lintly.com/gh/st3fan/tss-server/)
 
 This is a small REST API for storing and retrieving files. Very much like S3.
 
