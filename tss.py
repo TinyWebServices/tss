@@ -173,7 +173,7 @@ def get_object(bucket_name, object_name):
     headers = {
         "Content-Type": DEFAULT_CONTENT_TYPE,
         "Content-Encoding": DEFAULT_CONTENT_ENCODING,
-        "Content-Length": object_path.stat().st_size,
+        #"Content-Length": object_path.stat().st_size,
     }
 
     with get_lmdb_env().begin() as tx:
@@ -208,6 +208,7 @@ def put_object(bucket_name, object_name):
     meta_data = {
         "Content-Type": request.headers.get("Content-Type", DEFAULT_CONTENT_TYPE),
         "Content-Encoding": request.headers.get("Content-Encoding", DEFAULT_CONTENT_ENCODING),
+        "Content-Length": str(object_path.stat().st_size),
         "Last-Modified": str(maya.now()),
     }
 

@@ -17,14 +17,21 @@ def test_get_bucket(client):
     # Fill up a bucket
     r = client.put(flask.url_for('put_bucket', bucket_name="test"))
     assert r.status_code == 200
-    for n in range(17):
-        r = client.put(flask.url_for('put_object', bucket_name="test", object_name=f"test-{n}.txt"), data=f"This is test file #{n}")
+    for n in range(7):
+        r = client.put(flask.url_for('put_object', bucket_name="test", object_name=f"test-{n}.txt"),
+                       data=f"This is test file #{n}", headers={"Content-Type": "text/plain"})
         assert r.status_code == 200
     # Get the bucket contents
     r = client.get(flask.url_for('get_bucket', bucket_name="test"))
     assert r.status_code == 200
     assert type(r.json) == list
-    assert len(r.json) == 17
+    assert len(r.json) == 7
+    for n in range(7):
+        assert type(r.json[n]) == dict
+        assert r.json[n]["Key"] == f"test-{n}.txt"
+        assert r.json[n]["Content-Type"] == "text/plain"
+        assert r.json[n]["Content-Encoding"] == "identity"
+        assert r.json[n]["Content-Length"] == "20"
 
 def test_get_bucket_404(client):
     r = client.get(flask.url_for('get_bucket', bucket_name="doesnotexist"))

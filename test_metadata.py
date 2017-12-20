@@ -108,7 +108,7 @@ def test_delete_meta_data(client):
                    headers={"X-TSS-Foo": "Bar"})
     assert r.status_code == 200
     # Count number of values
-    assert tss.get_lmdb_env().stat()["entries"] == 4 # (Content-Type, Content-Encoding, Last-Modified + X-TSS-Foo)
+    assert tss.get_lmdb_env().stat()["entries"] == 5 # (Content-{Length,Type,Encoding}, Last-Modified + X-TSS-Foo)
     # Delete the file
     r = client.delete(flask.url_for('delete_object', bucket_name="test", object_name="foo/bar/test.txt"))
     assert r.status_code == 200
