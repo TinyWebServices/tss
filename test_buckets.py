@@ -38,7 +38,7 @@ def test_get_bucket_404(client):
     assert r.status_code == 404
 
 def parse_test_link_header(value):
-    LINK_RE = re.compile("<http://localhost/\w+(/[^>]+)>; rel=next$")
+    LINK_RE = re.compile("<http://localhost(/[^>]+)>; rel=next$")
     m = LINK_RE.match(value)
     if m:
         return m.group(1)

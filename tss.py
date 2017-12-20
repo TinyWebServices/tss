@@ -134,7 +134,7 @@ def get_bucket(bucket_name):
     if key and not not key.startswith(f"{bucket_name}:".encode()):
         _, object_name, header_name = split_key(key)
         next_prefix = key_prefix(bucket_name, object_name).encode()
-        next_link = "%s%s?next=%s" % (request.base_url, url_for('get_bucket', bucket_name=bucket_name), base64.b64encode(next_prefix).decode())
+        next_link = "%s?next=%s" % (request.base_url, base64.b64encode(next_prefix).decode())
         return jsonify(results), 200, {"Link": f"<{next_link}>; rel=next"}
 
     return jsonify(results)
