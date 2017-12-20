@@ -19,6 +19,12 @@ def test_get_object_404_on_object(client):
     res = client.get(flask.url_for('get_object', bucket_name="test", object_name="foo/bar/test.txt"))
     assert res.status_code == 404
 
+def test_head_object_404_on_object(client):
+    r = client.put(flask.url_for('put_bucket', bucket_name="test"))
+    assert r.status_code == 200
+    res = client.head(flask.url_for('get_object', bucket_name="test", object_name="foo/bar/test.txt"))
+    assert res.status_code == 404
+
 def test_get_object_200(client):
     # Create a bucket
     r = client.put(flask.url_for('put_bucket', bucket_name="test"))
@@ -30,6 +36,23 @@ def test_get_object_200(client):
     r = client.get(flask.url_for('get_object', bucket_name="test", object_name="foo/bar/test.txt"))
     assert r.status_code == 200
     assert r.data == b"test"
+
+def test_head_object_200(client):
+    # Create a bucket
+    r = client.put(flask.url_for('put_bucket', bucket_name="test"))
+    assert r.status_code == 200
+    # Store an object
+    r = client.put(flask.url_for('put_object', bucket_name="test", object_name="foo/bar/test.txt"),
+                   data="test", headers={"Content-Type": "text/plain", "X-TSS-Foo": "foo", "X-TSS-Bar": "bar"})
+    assert r.status_code == 200
+    # Get the objct
+    r = client.head(flask.url_for('get_object', bucket_name="test", object_name="foo/bar/test.txt"))
+    assert r.status_code == 200
+    assert r.headers["Content-Type"] == "text/plain"
+    assert r.headers["Content-Encoding"] == "identity"
+    assert r.headers["Content-Length"] == "4"
+    assert r.headers["X-TSS-Foo"] == "foo"
+    assert r.headers["X-TSS-Bar"] == "bar"
 
 def test_put_object_404(client):
     # Store an object in a bucket that does not exist

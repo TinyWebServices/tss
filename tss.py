@@ -9,7 +9,7 @@ import os
 import pathlib
 import shutil
 
-from flask import Flask, abort, jsonify, request, g, url_for
+from flask import Flask, abort, jsonify, request, g, url_for, Response
 from werkzeug.routing import BaseConverter
 from werkzeug.wsgi import wrap_file
 from raven.contrib.flask import Sentry
@@ -159,7 +159,7 @@ def delete_bucket(bucket_name):
 # Objects
 #
 
-@app.route("/<bucket_name:bucket_name>/<path:object_name>", methods=["GET"])
+@app.route("/<bucket_name:bucket_name>/<path:object_name>", methods=["GET", "HEAD"])
 def get_object(bucket_name, object_name):
 
     bucket_path = make_bucket_path(app.config["STORAGE_ROOT"], bucket_name, create=False)
@@ -186,7 +186,12 @@ def get_object(bucket_name, object_name):
             header_value = value.decode()
             headers[header_name] = header_value
 
-    return my_send_file(object_path, headers)
+    if request.method == "GET":
+        return my_send_file(object_path, headers)
+    else:
+        response = Response()
+        response.headers = headers
+        return response
 
 
 @app.route("/<bucket_name:bucket_name>/<path:object_name>", methods=["PUT"])
