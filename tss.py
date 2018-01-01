@@ -46,7 +46,7 @@ sentry = Sentry(app)
 def get_lmdb_env():
     env = getattr(g, '_env', None)
     if env is None:
-        g._env = lmdb.open(app.config["STORAGE_ROOT"] + '/metadata')
+        g._env = lmdb.open(app.config["STORAGE_ROOT"] + '/metadata', map_size=4*1024*1024*1024)
     return g._env
 
 
