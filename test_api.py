@@ -100,3 +100,35 @@ def test_delete_object_200(client):
     # Get the object
     r = client.get(flask.url_for('get_object', bucket_name="test", object_name="foo/bar/test.txt"))
     assert r.status_code == 404
+
+def test_put_object_sizes_text_plain(client):
+    # Create a bucket
+    r = client.put(flask.url_for('put_bucket', bucket_name="test"))
+    assert r.status_code == 200
+    # Put objects of different sizes
+    for size in (0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384):
+        # Put
+        data = ("X" * size).encode()
+        r = client.put(flask.url_for('put_object', bucket_name="test", object_name="foo/bar/test%d.txt" % size), data=data, headers={"Content-Type": "text/plain"})
+        assert r.status_code == 200
+        # Get
+        r = client.get(flask.url_for('get_object', bucket_name="test", object_name="foo/bar/test%d.txt" % size))
+        assert r.status_code == 200
+        assert r.headers["Content-Type"] == "text/plain; charset=utf-8"
+        assert r.data == data
+
+def test_put_object_sizes_image_png(client):
+    # Create a bucket
+    r = client.put(flask.url_for('put_bucket', bucket_name="test"))
+    assert r.status_code == 200
+    # Put objects of different sizes
+    for size in (0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384):
+        # Put
+        data = ("X" * size).encode()
+        r = client.put(flask.url_for('put_object', bucket_name="test", object_name="foo/bar/test%d.txt" % size), data=data, headers={"Content-Type": "image/png"})
+        assert r.status_code == 200
+        # Get
+        r = client.get(flask.url_for('get_object', bucket_name="test", object_name="foo/bar/test%d.txt" % size))
+        assert r.status_code == 200
+        assert r.headers["Content-Type"] == "image/png"
+        assert r.data == data
