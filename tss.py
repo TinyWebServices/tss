@@ -203,11 +203,7 @@ def put_object(bucket_name, object_name):
 
     object_path = make_object_path(app.config["STORAGE_ROOT"], bucket_name, object_name, create=True)
     with object_path.open(mode="wb") as f:
-        while True:
-            chunk = request.stream.read(128 * 1024)
-            if len(chunk) == 0:
-                break
-            f.write(chunk)
+        f.write(request.get_data())
 
     meta_data = {
         "Content-Type": request.headers.get("Content-Type", DEFAULT_CONTENT_TYPE),
