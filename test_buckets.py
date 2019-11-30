@@ -13,6 +13,12 @@ def test_put_bucket(client):
     r = client.put(flask.url_for('put_bucket', bucket_name="test"))
     assert r.status_code == 200
 
+def test_put_bucket_twice(client):
+    r = client.put(flask.url_for('put_bucket', bucket_name="test"))
+    assert r.status_code == 200
+    r = client.put(flask.url_for('put_bucket', bucket_name="test"))
+    assert r.status_code == 200
+
 def test_get_bucket(client):
     # Fill up a bucket
     r = client.put(flask.url_for('put_bucket', bucket_name="test"))
