@@ -36,7 +36,7 @@ class BucketNameConverter(BaseConverter):
 
 app = Flask(__name__)
 app.url_map.converters['bucket_name'] = BucketNameConverter
-app.config["STORAGE_ROOT"] = os.getenv("TSS_STORAGE_ROOT", "/data/tss")
+app.config["STORAGE_ROOT"] = os.getenv("TSS_STORAGE_ROOT", "/data")
 app.config["API_TOKEN"] = os.getenv("TSS_API_TOKEN", None)
 
 
