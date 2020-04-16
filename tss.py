@@ -12,7 +12,6 @@ import shutil
 from flask import Flask, abort, jsonify, request, g, url_for, Response
 from werkzeug.routing import BaseConverter
 from werkzeug.wsgi import wrap_file
-from raven.contrib.flask import Sentry
 import lmdb
 import maya
 
@@ -38,9 +37,6 @@ app = Flask(__name__)
 app.url_map.converters['bucket_name'] = BucketNameConverter
 app.config["STORAGE_ROOT"] = os.getenv("TSS_STORAGE_ROOT", "/data")
 app.config["API_TOKEN"] = os.getenv("TSS_API_TOKEN", None)
-
-
-sentry = Sentry(app)
 
 
 def get_lmdb_env():
