@@ -9,13 +9,6 @@ import pytest
 
 import tss
 
-@pytest.fixture
-def app(tmpdir):
-    app = tss.app
-    app.config["STORAGE_ROOT"] = str(tmpdir)
-    app.config["API_TOKEN"] = None
-    return app
-
 def test_hash_object_name():
     assert (tss.hash_object_name("hello.txt")) == "3857b672471862eab426eba0622e44bd2cedbd5d"
     assert (tss.hash_object_name("foo/bar.txt")) == "52235c6fb17f9b5c405adf27d35f65ce1ff388cb"

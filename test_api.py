@@ -2,11 +2,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import re
-import flask, pytest, requests
 
+import re
+import flask
+import pytest
 import tss
-from test_tss import app
+
+
+@pytest.fixture
+def client(tmpdir_factory):
+    app = tss.app
+    app.config["STORAGE_ROOT"] = str(tmpdir_factory.mktemp("data"))
+    app.config["SERVER_NAME"] = "localhost"
+    with app.test_client() as c:
+        with app.app_context():
+            yield c
 
 def test_get_object_404_on_bucket(client):
     # Non existing bucket
